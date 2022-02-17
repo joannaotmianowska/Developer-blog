@@ -1,5 +1,7 @@
+import { Link } from "remix";
+
 export default function Index() {
   return (
-    <div>this is tutorial</div>
+    <Link to="/posts">Posts</Link>
   );
 }
