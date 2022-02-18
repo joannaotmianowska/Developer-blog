@@ -1,73 +1,85 @@
-import { useActionData, Form, redirect } from "remix";
+import {
+  useActionData,
+  redirect,
+  Form,
+  useTransition
+} from "remix";
 import type { ActionFunction } from "remix";
 import invariant from "tiny-invariant";
 
 import { createPost } from "~/post";
 
 type PostError = {
-    title?: boolean;
-    slug?: boolean;
-    markdown?: boolean;
+  title?: boolean;
+  slug?: boolean;
+  markdown?: boolean;
 };
 
 export const action: ActionFunction = async ({
-    request
+  request
 }) => {
-    const formData = await request.formData();
+  await new Promise(res => setTimeout(res, 1000));
+  const formData = await request.formData();
 
-    const title = formData.get("title");
-    const slug = formData.get("slug");
-    const markdown = formData.get("markdown");
-    const errors: PostError = {};
-    if (!title) errors.title = true;
-    if (!slug) errors.slug = true;
-    if (!markdown) errors.markdown = true;
+  const title = formData.get("title");
+  const slug = formData.get("slug");
+  const markdown = formData.get("markdown");
 
-    if (Object.keys(errors).length) {
-        return errors;
-    }
+  const errors: PostError = {};
+  if (!title) errors.title = true;
+  if (!slug) errors.slug = true;
+  if (!markdown) errors.markdown = true;
 
-    invariant(typeof title === "string");
-    invariant(typeof slug === "string");
-    invariant(typeof markdown === "string");
+  if (Object.keys(errors).length) {
+    return errors;
+  }
 
-    await createPost({ title, slug, markdown });
+  invariant(typeof title === "string");
+  invariant(typeof slug === "string");
+  invariant(typeof markdown === "string");
 
-    return redirect("/admin");
+  await createPost({ title, slug, markdown });
+
+  return redirect("/admin");
 };
 
 export default function NewPost() {
-    const errors = useActionData();
+  const errors = useActionData();
+  const transition = useTransition();
 
-    return (
-      <Form method="post">
-        <p>
-          <label>
-            Post Title:{" "}
-            {errors?.title ? (
-              <em>Title is required</em>
-            ) : null}
-            <input type="text" name="title" />
-          </label>
-        </p>
-        <p>
-          <label>
-            Post Slug:{" "}
-            {errors?.slug ? <em>Slug is required</em> : null}
-            <input type="text" name="slug" />
-          </label>
-        </p>
-        <p>
-          <label htmlFor="markdown">Markdown:</label>{" "}
-          {errors?.markdown ? (
-            <em>Markdown is required</em>
+  return (
+    <Form method="post">
+      <p>
+        <label>
+          Post Title:{" "}
+          {errors?.title ? (
+            <em>Title is required</em>
           ) : null}
-          <br />
-          <textarea id="markdown" rows={20} name="markdown" />
-        </p>
-        <p>
-          <button type="submit">Create Post</button>
-        </p>
-      </Form>
-    );
-  }
+          <input type="text" name="title" />
+        </label>
+      </p>
+      <p>
+        <label>
+          Post Slug:{" "}
+          {errors?.slug ? <em>Slug is required</em> : null}
+          <input type="text" name="slug" />
+        </label>
+      </p>
+      <p>
+        <label htmlFor="markdown">Markdown:</label>{" "}
+        {errors?.markdown ? (
+          <em>Markdown is required</em>
+        ) : null}
+        <br />
+        <textarea id="markdown" rows={20} name="markdown" />
+      </p>
+      <p>
+        <button type="submit">
+          {transition.submission
+              ? "Creating..."
+              : "Create Post"}
+        </button>
+      </p>
+    </Form>
+  );
+}
